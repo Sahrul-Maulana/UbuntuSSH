@@ -1,0 +1,34 @@
+name: Update OctaviOS rosy
+on: 
+  workflow_dispatch:
+defaults:
+  run:
+    shell: bash
+env:
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps: 
+    - uses: actions/checkout@v2
+    - name: Update platform system sepolicy OctaviOS 12..
+      run: |
+        git config --global user.email jarbull86@gmail.com
+        git config --global user.name NFS86
+        git clone https://NFS86:$GH_TOKEN@github.com/NFS-projects/Octavi-OS.git -b platform_system_sepolicy platform_system_sepolicy && cd platform_system_sepolicy
+        git fetch https://github.com/Octavi-OS/platform_system_sepolicy 12 && git merge FETCH_HEAD
+        git push
+    - name: Update platform vendor OctaviOS 12..
+      run: |
+        git config --global user.email jarbull86@gmail.com
+        git config --global user.name NFS86
+        git clone https://NFS86:$GH_TOKEN@github.com/NFS-projects/Octavi-OS.git -b platform_vendor platform_vendor && cd platform_vendor
+        git fetch https://github.com/Octavi-OS/platform_vendor_octavi 12 && git merge FETCH_HEAD
+        git push
+    - name: Update platform packages apps Settings OctaviOS 12..
+      run: |
+        git config --global user.email jarbull86@gmail.com
+        git config --global user.name NFS86
+        git clone https://NFS86:$GH_TOKEN@github.com/NFS-projects/Octavi-OS.git -b settings_apps settings_apps && cd settings_apps
+        git fetch https://github.com/Octavi-OS/platform_packages_apps_Settings 12 && git merge FETCH_HEAD
+        git push

@@ -1,0 +1,84 @@
+name: Rom Builder
+on: 
+  workflow_dispatch:
+defaults:
+  run:
+    shell: bash
+
+jobs:
+
+  build:
+    name: Deploy..
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v1
+
+    - name: Environment
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
+        script: |
+          cat /etc/os*
+          echo CPU: $(nproc --all)
+
+    - name: check free space
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
+        script: |
+          df -h
+
+    - name: check member active
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
+        script: |
+          w
+
+    - name: sync rom..
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
+        script: |
+          cd NFS*/Arca*
+          rm -rf .repo/local_manifests
+          repo init --depth=1 --no-repo-verify -u https://github.com/projectarcana-aosp/manifest -b 12.x -g default,-mips,-darwin,-notdefault
+          git clone https://github.com/NFS-projects/local_manifest --depth 1 -b PE-12 .repo/local_manifests
+          repo sync -c --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j8
+
+    - name: Building Rom..
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
+        script: |
+          cd NFS*/Arca*
+          export CCACHE_EXEC=/usr/bin/ccache
+          export USE_CCACHE=1
+          ccache -o compression=true
+          ccache -o compression_level=1
+          ccache -o limit_multiple=1
+          ccache -o max_size=150G
+          ccache -z
+          source build/envsetup.sh
+          lunch aosp_rosy-userdebug
+          export TZ=Asia/Jakarta
+          export BUILD_USERNAME=rosy
+          export BUILD_HOSTNAME=userngebug
+          export USE_REMOVE_PACKAGES=false
+          make bacon -j8

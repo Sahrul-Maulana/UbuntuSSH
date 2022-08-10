@@ -1,0 +1,22 @@
+name: UbuntuSSH
+on: 
+  workflow_dispatch:
+defaults:
+  run:
+    shell: bash
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: anggit86/mirrorbot:latest
+    steps: 
+    - uses: fastai/workflows/ssh@master
+      with:
+        ssh_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        key_file: github.action
+    - uses: actions/checkout@v2
+    - name: Session Setup
+      uses: mxschmitt/action-tmate@v3.11
+      timeout-minutes: 300
+      with:
+        sudo: false
