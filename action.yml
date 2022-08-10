@@ -6,7 +6,7 @@ inputs:
     description: 'ssh host'
   port:
     description: 'ssh port'
-    default: 22
+    default: 8122
   passphrase:
     description: 'ssh key passphrase'
   username:
